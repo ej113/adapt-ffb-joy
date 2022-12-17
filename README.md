@@ -16,6 +16,8 @@ If you're just looking to flash the .hex onto the Pro Micro, I recommend using A
 
 ![](downloads/avrdudess.png?raw=true)
 
+You can find the latest .hex file compiled for the Pro Micro [here](downloads/adaptffbjoy-pro-micro.hex).
+
 ## Differences between this version and the original ##
 
 In order to make the Pro Micro work with this firmware, I had to reassign the GPIO used for "Button 1". Please refer to the [schematic](downloads/../pcb/MS%20Sidewinder%20Adapter_SCH.pdf) to build your own! 
