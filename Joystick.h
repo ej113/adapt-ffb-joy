@@ -36,7 +36,7 @@ extern const uint8_t INPUT_REPORTID_ALL;
 // Data structures for input reports from the joystick positions
 
 typedef struct
-	{
+{
 	// Joystick Input Report
 	uint8_t	reportId;	// =1
 	int16_t  X;
@@ -47,7 +47,21 @@ typedef struct
 	uint8_t  Throttle;
 	uint16_t Button;
 	uint8_t Hat;
-	} USB_JoystickReport_Data_t;
+} USB_JoystickReport_Data_t;
+
+typedef struct
+{
+	// Joystick Input Report
+	uint8_t	reportId;	// =1
+	int16_t  Steering;
+	int16_t  Accellerator;
+	//int16_t  Z;
+	//int8_t  Rz, Rx, Ry;
+	//uint8_t  Rudder;
+	uint8_t  Brake;
+	uint16_t Button;
+	//uint8_t Hat;
+} USB_WheelReport_Data_t;
 
 // Functions that form the inferface from the generic parts of the code
 // to joystick model specific parts.
@@ -71,6 +85,8 @@ int Joystick_Connect(void);
 // If <inReportId> has value INPUT_REPORTID_ALL, all input report IDs should
 // generated.
 int Joystick_CreateInputReport(uint8_t inReportId, USB_JoystickReport_Data_t* const outReportData);
+
+int Wheel_CreateInputReport(uint8_t inReportId, USB_WheelReport_Data_t* const outReportData);
 
 #endif
 
