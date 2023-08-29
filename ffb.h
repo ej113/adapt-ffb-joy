@@ -69,7 +69,7 @@ typedef struct
 	uint8_t	enableAxis; // bits: 0=X, 1=Y, 2=DirectionEnable
 	uint8_t	directionX;	// angle (0=0 .. 255=360deg)
 	uint8_t	directionY;	// angle (0=0 .. 255=360deg)
-//	uint16_t	startDelay;	// 0..32767 ms
+	uint16_t	startDelay;	// 0..32767 ms
 	} USB_FFBReport_SetEffect_Output_Data_t;
 
 typedef struct
@@ -89,10 +89,10 @@ typedef struct
 	uint8_t	parameterBlockOffset;	// bits: 0..3=parameterBlockOffset, 4..5=instance1, 6..7=instance2
 	uint8_t cpOffset;	// 0..255
 	int8_t	positiveCoefficient;	// -128..127
-//	int8_t	negativeCoefficient;	// -128..127
-//	uint8_t	positiveSaturation;	// -128..127
-//	uint8_t	negativeSaturation;	// -128..127
-//	uint8_t	deadBand;	// 0..255
+	int8_t	negativeCoefficient;	// -128..127
+	uint8_t	positiveSaturation;	// -128..127
+	uint8_t	negativeSaturation;	// -128..127
+	uint8_t	deadBand;	// 0..255
 	} USB_FFBReport_SetCondition_Output_Data_t;
 
 typedef struct
