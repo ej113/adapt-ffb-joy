@@ -1,11 +1,31 @@
-# What is Adapt-FFB-Joy #
+# Adapt-FFB-Joy: A joystick adapter for Microsoft SideWinder Force Feedback Pro Joysticks #
 
-Adapt-FFB-Joy is an AVR microcontroller based device that looks like a joystick with advanced force feedback features in a Windows machine without need for installing any device drivers to PC.
+Adapt-FFB-Joy is an adapter that converts Microsoft SideWinder joysticks (the ones with the old DB15 connector) to USB-C. This adapter and firmware allows users to enjoy the advanced force feedback features of the SideWinder joysticks on a Windows machine without need for installing any custom device drivers.
 
-This project contains the software for the AVR microcontroller as well as basic instructions for [building the hardware](https://github.com/tloimu/adapt-ffb-joy/blob/wiki/HowToBuild.md).
+## Sparkfun Pro Micro Support ##
 
-Currently, it allows connecting a Microsoft Sidewinder Force Feedback Pro (FFP) joystick (with a game port connector) to various MS Windows versions as a standard **USB joystick with force feedback** and **no need to install any device drivers**. The adapter also allows to solder a few additional trim pots to work e.g. as elevator trims, aileron trims and rudder pedals in your favorite simulator game.
+The original version of the Adapt-FFB-Joy firmware was built to run on a Teensy 2.0 with an Atmel Atmega 32U4 microcontroller. As of this writing, the Teensy 2.0 has long been retired. However, SparkFun continues to make a breakout board (called the [Pro Micro](https://www.sparkfun.com/products/12640)) that is *mostly* complatible with the original firmware. 
 
-For more information, see [Adapt-ffb-joy Wiki] (https://github.com/tloimu/adapt-ffb-joy/blob/wiki/README.md)
+This fork of the firmware has been modified to target the Sparkfun Pro Micro instead of the Teensy 2.0. Pins have been reassigned to better suit the Pro Micro. I have also included a breakout PCB that should be very inexpensive and easy to assemble.
 
-The firmware software project is configured to compile for ATmega32U4 with WinAVR-20100110 or newer version.
+## Building and flashing the firmware in 2022 ##
+
+This project was originally designed to build on the latest (and very old) [WinAVR-20100110](https://sourceforge.net/projects/winavr/files/WinAVR/20100110/). I was unsuccessful in getting these libraries to work on Windows 10, so instead, I built the firmware using a Windows 7 VM. Your mileage may vary. 
+
+If you're just looking to flash the .hex onto the Pro Micro, I recommend using AVRDUDESS (avrdude GUI for Windows). I have included a screenshot of my flash settings below. 
+
+![](downloads/avrdudess.png?raw=true)
+
+You can find the latest .hex file compiled for the Pro Micro [here](downloads/adaptffbjoy-pro-micro.hex).
+
+## Differences between this version and the original ##
+
+In order to make the Pro Micro work with this firmware, I had to reassign the GPIO used for "Button 1". Please refer to the [schematic](downloads/../pcb/MS%20Sidewinder%20Adapter_SCH.pdf) to build your own! 
+
+I have also included Gerber PCB files in case you want to build a breakout board of your own. 
+
+![](downloads/pcb.png?raw=true)
+
+## Legacy documentation ##
+
+For more information, check out the original [Adapt-ffb-joy Wiki](https://github.com/tloimu/adapt-ffb-joy/blob/wiki/README.md)
