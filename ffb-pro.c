@@ -277,12 +277,12 @@ void FfbproSetEnvelope(
 	midi_data->attackLevel = CalcGain(data->attackLevel, effect->usb_gain);
 	midi_data->fadeLevel = CalcGain(data->fadeLevel, effect->usb_gain);
 
-	midi_data->attackTime = UsbUint16ToMidiUint14_Time(data->attackTime);
+	midi_data->attackTime = UsbUint16ToMidiUint14(data->attackTime);
 
 	if (data->fadeTime == USB_DURATION_INFINITE)
 		midi_data->fadeTime = MIDI_DURATION_INFINITE;
 	else
-		midi_data->fadeTime = UsbUint16ToMidiUint14_Time(effect->usb_duration - effect->usb_fadeTime);
+		midi_data->fadeTime = UsbUint16ToMidiUint14(effect->usb_duration - effect->usb_fadeTime);
 
 	if (effect->state & MEffectState_SentToJoystick) {
 		FfbproSendModify(eid, 0x60, midi_data->fadeTime);
@@ -422,9 +422,9 @@ void FfbproSetPeriodic(
 
 	// Calculate frequency (in MIDI it is in units of Hz and can have value from 1 to 169Hz)
 	if (data->period >= 1000)
-		midi_data->frequency = 0x0001; //1Hz
+		midi_data->frequency = 0x0100; //1Hz
 	else if (data->period <= 5)
-		midi_data->frequency = 0x0129; //169Hz
+		midi_data->frequency = 0x2901; //169Hz
 	else
 		midi_data->frequency = UsbUint16ToMidiUint14(1000 / data->period);
 
@@ -628,7 +628,7 @@ int FfbproSetEffect(
 				} else {
 					if (effect->usb_duration > effect->usb_fadeTime) {
 						// add some safety and special case handling
-						midi_data->fadeTime = UsbUint16ToMidiUint14_Time(effect->usb_duration - effect->usb_fadeTime);
+						midi_data->fadeTime = UsbUint16ToMidiUint14(effect->usb_duration - effect->usb_fadeTime);
 					} else {
 						midi_data->fadeTime = midi_data->duration;
 					}
@@ -752,7 +752,7 @@ void FfbproCreateNewEffect(
 	volatile FFP_MIDI_Effect_Basic *midi_data = (volatile FFP_MIDI_Effect_Basic *)&effect->data;
 
 	midi_data->magnitude = 0x7f;
-	midi_data->frequency = 0x0001;
+	midi_data->frequency = 0x0100;
 	midi_data->attackLevel = 0x00;
 	midi_data->attackTime = 0x0000;
 	midi_data->fadeLevel = 0x00;
@@ -763,8 +763,8 @@ void FfbproCreateNewEffect(
 	midi_data->unknown1 = 0x7F;
 	midi_data->triggerButton = 0x0000;
 	midi_data->gain = 0x7F;
-	midi_data->sampleRate = 0x0064;
-	midi_data->truncate = 0x4E10;
+	midi_data->sampleRate = 0x6400;
+	midi_data->truncate = 0x104E;
 	if (inData->effectType == 0x01)	// constant
 		midi_data->param2 = 0x0000;
 	else
