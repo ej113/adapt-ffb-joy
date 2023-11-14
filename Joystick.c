@@ -253,11 +253,14 @@ int Joystick_CreateInputReport(uint8_t inReportId, USB_JoystickReport_Data_t* co
 
 	if (sw_id == SW_ID_FFPW)
 		{
-		outReportData->Button = ((sw_report[2] << 2) | (sw_report[3] >> 6)) ^ 0x00ff;
+		outReportData->Button = (((sw_report[2] & 0x3F) << 2) | (sw_report[3] >> 6)) ^ 0x00FF;
+	  
 		outReportData->X = ((sw_report[4] & 0x03) << 8) + sw_report[5];
 		outReportData->Y = (sw_report[4] & 0xfc) << 2;
-		/* actually break for wheel */
+		/* Throttle is actually brake for wheel */
 		outReportData->Throttle = 63-(sw_report[3] & 0x3f);
+		outReportData->Hat = 0xFF;
+		outReportData->Rz = 0;
 		}
 	else
 		{
@@ -276,14 +279,15 @@ int Joystick_CreateInputReport(uint8_t inReportId, USB_JoystickReport_Data_t* co
 		outReportData->Throttle = ((sw_report[5] & 0x3f) << 1) + (sw_report[4] >> 7);
 		if (sw_report[5] & 0x20)
 			outReportData->Throttle |= 0b11000000;
-
-		outReportData->Z = 0;	// not used at the moment
-
-		// Get data from additional controls
-		outReportData->Rudder = (added_controls_adc.pedal2 - added_controls_adc.pedal1) / 2 - 128;	// Combine two pedals into a single rudder
-		outReportData->Rx = added_controls_adc.trim2;	// rudder trim
-		outReportData->Ry = added_controls_adc.trim1;	// elevator trim
 		}
+
+	outReportData->Z = 0;	// not used at the moment
+
+	// Get data from additional controls
+	outReportData->Rudder = (added_controls_adc.pedal2 - added_controls_adc.pedal1) / 2 - 128;	// Combine two pedals into a single rudder
+	outReportData->Rx = added_controls_adc.trim2;	// rudder trim
+	outReportData->Ry = added_controls_adc.trim1;	// elevator trim
+
 
 /*
 	// This test code generates ever changing position and button values
