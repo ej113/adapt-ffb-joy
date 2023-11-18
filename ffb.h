@@ -254,6 +254,7 @@ uint8_t GetMidiEffectType(uint8_t id);
 void FfbSendSysEx(const uint8_t* midi_data, uint8_t len);
 uint8_t FfbSetParamMidi_14bit(uint8_t effectState, volatile uint16_t *midi_data_param, uint8_t effectId, uint8_t address, uint16_t value);
 uint8_t FfbSetParamMidi_7bit(uint8_t effectState, volatile uint8_t *midi_data_param, uint8_t effectId, uint8_t address, uint8_t value);
+uint8_t FfbSetParamMidi_7bitMSB(uint8_t effectState, volatile uint8_t *midi_data_param, uint8_t effectId, uint8_t address, uint8_t value);
 uint16_t UsbUint16ToMidiUint14_Time(uint16_t inUsbValue);
 uint16_t UsbUint16ToMidiUint14(uint16_t inUsbValue);
 int16_t UsbInt8ToMidiInt14(int8_t inUsbValue);

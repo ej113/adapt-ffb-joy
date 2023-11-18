@@ -52,7 +52,48 @@ uint8_t FfbwheelUsbToMidiEffectType(uint8_t usb_effect_type)
 
 uint8_t FfbwheelEffectMemFull(uint8_t new_midi_type)
 {
-	return 0; //Supported quantities of each effect not yet known
+	uint8_t count_waveform = 0, count_constant = 0,
+			count_spring = 0, count_damper = 0,
+			count_inertia = 0, count_friction = 0;
+	
+	uint8_t midi_type = new_midi_type; //count the new one first
+	
+	for (uint8_t id = 2; id <= (MAX_EFFECTS + 1); id++) {
+		switch (midi_type) {
+			case 0x06:
+				count_constant++;
+				break;			
+			case 0x05:
+			case 0x03:
+			case 0x02:
+			case 0x04:
+				count_waveform++;
+				return 1; //not supported yet
+			case 0x0D:
+				count_spring++;
+				break;		
+			case 0x0E:
+				count_damper++;
+				break;	
+			case 0x0F:
+				count_inertia++;
+				break;	
+			case 0x10:
+				count_friction++;
+				return 1; //not supported yet
+//			case 0x00:
+//				count_custom++;
+		}
+		midi_type = GetMidiEffectType(id);
+	}
+	
+	if (count_constant > 2 || count_waveform > 10 || count_spring > 2 || count_damper > 2 || 
+		count_inertia > 2 || count_friction > 2) {
+		return 1;
+	} else {
+		return 0;
+	}	
+	//Supported quantities of each effect not yet known for wheel. Making some assumptions for now and blocking effects without sufficient basic implementation 
 }
 
 /**
@@ -189,7 +230,8 @@ void FfbwheelSendModify(uint8_t effectId, uint8_t address, uint16_t value)
 void FfbwheelModifyDuration(uint8_t effectState, uint16_t* midi_data_param, uint8_t effectId, uint16_t duration)
 {
 	//FfbwheelSendModify(effectId, 0x00, duration);
-	FfbSetParamMidi_14bit(effectState, midi_data_param, effectId, 0x00, duration); // CHANGED FOR COMPATIBILITY - NOT TESTED FOR WHEEL
+	FfbSetParamMidi_14bit(effectState, midi_data_param, effectId, 
+							FFW_MIDI_MODIFY_DURATION, duration); // CHANGED FOR COMPATIBILITY - NOT TESTED FOR WHEEL
 }
 
 void FfbwheelModifyDeviceGain(uint8_t usb_gain)
@@ -260,25 +302,28 @@ int FfbwheelSetEffect(
 	case USB_EFFECT_RAMP:
 	{
 		midi_data_len = sizeof(FFW_MIDI_Effect_Periodic_Ramp_t);
-		FFW_MIDI_Effect_Periodic_Ramp_t* midi_data = (FFW_MIDI_Effect_Periodic_Ramp_t*)e->data;
+		//FFW_MIDI_Effect_Periodic_Ramp_t* midi_data = (FFW_MIDI_Effect_Periodic_Ramp_t*)e->data;
 	}
 	break;
 	
 	case USB_EFFECT_CONSTANT:
 	{
 		midi_data_len = sizeof(FFW_MIDI_Effect_ConstantForce_t);
-		FFW_MIDI_Effect_ConstantForce_t* midi_data = (FFW_MIDI_Effect_ConstantForce_t*)e->data;
+		//FFW_MIDI_Effect_ConstantForce_t* midi_data = (FFW_MIDI_Effect_ConstantForce_t*)e->data;
 	}
 	break;
 
 	case USB_EFFECT_SPRING:
 	case USB_EFFECT_DAMPER:
 	case USB_EFFECT_INERTIA:
-	
+	{
+		midi_data_len = sizeof(FFW_MIDI_Effect_Spring_Inertia_Damper_t);
+		//FFW_MIDI_Effect_Spring_Inertia_Damper_t* midi_data = (FFW_MIDI_Effect_Spring_Inertia_Damper_t*)e->data;
+	}
 	case USB_EFFECT_FRICTION:
 	{
 		midi_data_len = sizeof(FFW_MIDI_Effect_Friction_t);
-		FFW_MIDI_Effect_Friction_t* midi_data = (FFW_MIDI_Effect_Friction_t*)e->data;
+		//FFW_MIDI_Effect_Friction_t* midi_data = (FFW_MIDI_Effect_Friction_t*)e->data;
 	}
 	break;
 	
@@ -362,13 +407,33 @@ void FfbwheelCreateNewEffect(
 	case USB_EFFECT_CONSTANT:
 	{
 		FFW_MIDI_Effect_ConstantForce_t* midi_data = (FFW_MIDI_Effect_ConstantForce_t*)effect->data;
+		
+		midi_data->unknown2 = 0x7f;
+		midi_data->attackLevel = 0x7f;
+		midi_data->attackTime = 0x0000;
+		midi_data->magnitude = 0x7f;
+		midi_data->fadeTime = MIDI_DURATION_INFINITE;
+		midi_data->fadeLevel = 0x7f;
+		midi_data->forceDirection = 0x00; //full ccw
 	}
 	break;
 
 	case USB_EFFECT_SPRING:
 	case USB_EFFECT_DAMPER:
 	case USB_EFFECT_INERTIA:
-	
+	{
+		FFW_MIDI_Effect_Spring_Inertia_Damper_t* midi_data = (FFW_MIDI_Effect_Spring_Inertia_Damper_t*)effect->data;
+		
+		midi_data->unknown3 = 0x00;
+		midi_data->negativeCoeff = 0x7d;
+		midi_data->unknown4[0] = 0x3e;
+		midi_data->unknown4[1] = 0x3f;
+		midi_data->unknown4[2] = 0x3e;
+		midi_data->unknown4[3] = 0x3f;
+		midi_data->unknown4[4] = 0x7d;
+		midi_data->positiveCoeff = 0x00;
+		
+	}
 	case USB_EFFECT_FRICTION:
 	{
 		FFW_MIDI_Effect_Friction_t* midi_data = (FFW_MIDI_Effect_Friction_t*)effect->data;

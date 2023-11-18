@@ -233,6 +233,20 @@ uint8_t FfbSetParamMidi_7bit(uint8_t effectState, volatile uint8_t* midi_data_pa
 		}
 	}	
 
+uint8_t FfbSetParamMidi_7bitMSB(uint8_t effectState, volatile uint8_t* midi_data_param, uint8_t effectId, uint8_t address, uint8_t value)
+	{ // why does midi data need to be volatile? What else can change it?? Are the USB FFB messages not processed sequentially?
+	//This is for 7bit values sent in the MSB rather than LSB, but still stored in a single byte in the SysEx
+	if (value == *midi_data_param)
+		return 0;
+	else
+		{
+		*midi_data_param = value;
+		if (effectState & MEffectState_SentToJoystick)			
+			ffb->SendModify(effectId, address, (uint16_t) value << 8);
+		return 1;
+		}
+	}
+
 uint16_t UsbUint16ToMidiUint14_Time(uint16_t inUsbValue)
 	{ //Only use for Time conversion from ms. Includes /2 as MIDI duration is in units of 2ms and USB 1ms
 	if (inUsbValue == 0xFFFF)

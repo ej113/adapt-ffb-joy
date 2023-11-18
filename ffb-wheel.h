@@ -126,6 +126,7 @@ void FfbwheelCreateNewEffect(USB_FFBReport_CreateNewEffect_Feature_Data_t* inDat
 uint8_t FfbwheelUsbToMidiEffectType(uint8_t usb_effect_type);
 uint8_t FfbwheelEffectMemFull(uint8_t new_midi_type);
 
+#define FFW_MIDI_MODIFY_DURATION			0x00
 #define FFW_MIDI_MODIFY_MAGNITUDE			0x06
 #define FFW_MIDI_MODIFY_FORCEDIRECTION		0x09 //for constant force
 #define FFW_MIDI_MODIFY_POSITIVECOEFF		0x06 //spring damper inertia
