@@ -131,4 +131,6 @@ uint8_t FfbwheelEffectMemFull(uint8_t new_midi_type);
 #define FFW_MIDI_MODIFY_POSITIVECOEFF		0x06 //spring damper inertia
 #define FFW_MIDI_MODIFY_NEGATIVECOEFF		0x03 //spring damper inertia
 
+#define FFW_MIDI_MODIFY_DEVICEGAIN			0x00
+
 #endif // _FFB_WHEEL_

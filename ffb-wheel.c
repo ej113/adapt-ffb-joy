@@ -95,7 +95,24 @@ uint8_t FfbwheelDeviceControl(uint8_t usb_control)
 	USB_DCTRL_PAUSE				0x05
 	USB_DCTRL_CONTINUE			0x06
 	*/
+
+	const uint8_t usbToMidiControl[] = {
+		0x2e, 	// Enable Actuators
+		0x3f, 	// Disable Actuators (time stepping continues in background)		
+		0x6a, 	// Stop All (including stop auto centre)
+		0x1d,	// Reset  (stop all effects; free all effects; reset device gain to max; enable actuators; continue; enable auto spring centre)
+		0x48,	// Pause (time stepping is paused)
+		0x59,	// Continue (note pause and continue are swapped vs. FFP)
+	};	//These include checksums
+	
+	if (usb_control < 1 || usb_control > 6)
+		return 0; //not supported
+	
 	uint8_t command[2] = {0xf3};
+	command[1] = usbToMidiControl[usb_control-1];
+	FfbSendData(command, sizeof(command));
+	//Is a wait needed here?
+	return 1; //supported command
 	
 	if (usb_control == USB_DCTRL_RESET) {
 		command[1] = 0x1d;
@@ -175,11 +192,10 @@ void FfbwheelModifyDuration(uint8_t effectState, uint16_t* midi_data_param, uint
 	FfbSetParamMidi_14bit(effectState, midi_data_param, effectId, 0x00, duration); // CHANGED FOR COMPATIBILITY - NOT TESTED FOR WHEEL
 }
 
-void FfbwheelModifyDeviceGain(uint8_t gain)
-{ // TO IMPLEMENT: CHANGED FOR COMPATIBILITY - NOT TESTED FOR WHEEL
-	static const uint8_t gainCommand[] = {0xf1, 0x10, 0x40, 0x00, 0x7f, 0x00}; // only sends max gain for now
-	FfbSendData(gainCommand, sizeof(gainCommand));
-
+void FfbwheelModifyDeviceGain(uint8_t usb_gain)
+{
+	//0xf1, 0x10, 0x40, 0x00, 0x7f, 0x00 is max gain
+	FfbwheelSendModify(0x00, FFW_MIDI_MODIFY_DEVICEGAIN, (usb_gain >> 1) & 0x7f);
 }
 
 
