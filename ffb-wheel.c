@@ -1,5 +1,6 @@
 /*
 	Copyright 2013  Saku Kekkonen
+	Copyright 2023  Ed Wilkinson
 
 	Permission is hereby granted, free of charge, to any person obtaining
 	a copy of this software and associated documentation files (the
@@ -120,7 +121,7 @@ const uint8_t* FfbwheelGetSysExHeader(uint8_t* hdr_len)
 
 static void FfbwheelSendEffectOper(uint8_t effectId, uint8_t operation)
 {
-	cmd_f2_t op;
+	FFW_MIDI_Effect_Operation_t op;
 	
 	op.cmd = 0xf2;
 	op.effect_id = effectId;
@@ -154,7 +155,7 @@ void FfbwheelFreeEffect(uint8_t effectId)
 
 void FfbwheelSendModify(uint8_t effectId, uint8_t address, uint16_t value)
 {
-	cmd_f1_t op;
+	FFW_MIDI_Modify_t op;
 
 	op.cmd = 0xf1;
 	op.def_and_address = 0x40 | address;	// could set 0x00 for values that are defaults
@@ -242,15 +243,15 @@ int FfbwheelSetEffect(
 	case USB_EFFECT_SAWTOOTHUP:
 	case USB_EFFECT_RAMP:
 	{
-		midi_data_len = sizeof(cmd_f0_wave_t);
-		cmd_f0_wave_t* midi_data = (cmd_f0_wave_t*)e->data;
+		midi_data_len = sizeof(FFW_MIDI_Effect_Periodic_Ramp_t);
+		FFW_MIDI_Effect_Periodic_Ramp_t* midi_data = (FFW_MIDI_Effect_Periodic_Ramp_t*)e->data;
 	}
 	break;
 	
 	case USB_EFFECT_CONSTANT:
 	{
-		midi_data_len = sizeof(cmd_f0_constant_force_t);
-		cmd_f0_constant_force_t* midi_data = (cmd_f0_constant_force_t*)e->data;
+		midi_data_len = sizeof(FFW_MIDI_Effect_ConstantForce_t);
+		FFW_MIDI_Effect_ConstantForce_t* midi_data = (FFW_MIDI_Effect_ConstantForce_t*)e->data;
 	}
 	break;
 
@@ -260,8 +261,8 @@ int FfbwheelSetEffect(
 	
 	case USB_EFFECT_FRICTION:
 	{
-		midi_data_len = sizeof(cmd_f0_friction_t);
-		cmd_f0_friction_t* midi_data = (cmd_f0_friction_t*)e->data;
+		midi_data_len = sizeof(FFW_MIDI_Effect_Friction_t);
+		FFW_MIDI_Effect_Friction_t* midi_data = (FFW_MIDI_Effect_Friction_t*)e->data;
 	}
 	break;
 	
@@ -279,9 +280,9 @@ void FfbwheelCreateNewEffect(
 	USB_FFBReport_CreateNewEffect_Feature_Data_t* data,
 	volatile TEffectState* effect)
 {
-	cmd_f0_common_t* c = (cmd_f0_common_t*)&effect->data;
+	FFW_MIDI_Effect_Common_t* c = (FFW_MIDI_Effect_Common_t*)&effect->data;
 	c->command = 0x20; // always 0x20
-	c->unknown = 0x7f; // always 0x7f
+	c->unknown1 = 0x7f; // always 0x7f
 	c->direction = 0x00; // 0 for effect not using direction
 
 		/* ramp   f0 00 01 0a 15 20 05 7f 6e 1e 40 7f 00 00 7f 00 00 7f 6e 1e 7f 6e 1e 3e  3e f7 */
@@ -318,35 +319,33 @@ void FfbwheelCreateNewEffect(
 	case USB_EFFECT_SAWTOOTHUP:
 	case USB_EFFECT_RAMP:
 	{
-		cmd_f0_wave_t* midi_data = (cmd_f0_wave_t*)effect->data;
+		FFW_MIDI_Effect_Periodic_Ramp_t* midi_data = (FFW_MIDI_Effect_Periodic_Ramp_t*)effect->data;
 		midi_data->common.direction = 0x40;
 		
 		// TODO: convert from 16/8-bit presentation
 
 		midi_data->precise_dir = 0x7f;
-		midi_data->e_y1 = 0x7f;
-		midi_data->e_x1 = 0x0000;
-		midi_data->p_amplitude = 0x07f;
-		midi_data->e_y2 = 0x7f;
-		midi_data->p_y_offset = 0x3e;
-		midi_data->e_y2 = 0x7f;
-		midi_data->p_y_offset = 0x3e;
+		midi_data->attackLevel = 0x7f;
+		midi_data->attackTime = 0x0000;
+		midi_data->magnitude = 0x07f;
+		midi_data->fadeLevel = 0x7f;
+		midi_data->offset = 0x3e;
 		
 		if (data->effectType == USB_EFFECT_RAMP) {
-			midi_data->p_x_offset = 0x0000;
-			midi_data->e_x2 = 0x1e6e;
-			midi_data->p_t = 0x1e6e;
+			midi_data->phase = 0x0000;
+			midi_data->fadeTime = 0x1e6e;
+			midi_data->frequency = 0x1e6e;
 		} else {
-			midi_data->p_x_offset = 0x4000; // 0x00 0x40
-			midi_data->e_x2 = 0x1265;
-			midi_data->p_t = 0x0374;
+			midi_data->phase = 0x4000; // 0x00 0x40
+			midi_data->fadeTime = 0x1265;
+			midi_data->frequency = 0x0374;
 		}
 	}
 	break;
 	
 	case USB_EFFECT_CONSTANT:
 	{
-		cmd_f0_constant_force_t* midi_data = (cmd_f0_constant_force_t*)effect->data;
+		FFW_MIDI_Effect_ConstantForce_t* midi_data = (FFW_MIDI_Effect_ConstantForce_t*)effect->data;
 	}
 	break;
 
@@ -356,8 +355,8 @@ void FfbwheelCreateNewEffect(
 	
 	case USB_EFFECT_FRICTION:
 	{
-		cmd_f0_friction_t* midi_data = (cmd_f0_friction_t*)effect->data;
-		midi_data->positive_coefficient = 0x7e;
+		FFW_MIDI_Effect_Friction_t* midi_data = (FFW_MIDI_Effect_Friction_t*)effect->data;
+		midi_data->coeff = 0x7e;
 	}
 	break;
 	
