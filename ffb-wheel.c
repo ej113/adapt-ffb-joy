@@ -216,12 +216,18 @@ void FfbwheelSendModify(uint8_t effectId, uint8_t address, uint16_t value)
 	FFW_MIDI_Modify_t op;
 
 	op.cmd = 0xf1;
-	op.def_and_address = 0x40 | address;	// could set 0x00 for values that are defaults
+	op.def_and_address = address;
 	op.effect_id = effectId;
 	op.value = value;
 	
 	uint8_t* d = (uint8_t*)&op;
-	uint8_t sum = d[0] + (d[2] & ~0x40) + d[3] + d[4] + d[5];
+	uint8_t sum = d[2] + d[3] + d[4] + d[5];
+	
+	if (sum > 0x0F) 
+		op.def_and_address &= 0x40; //bit indicates sum > 256 when complete 
+	
+	sum += d[0]; //complete sum
+	
 	op.checksum = (0x80 - sum) & 0x7f;
 	
 	FfbSendData(d, sizeof(op));
