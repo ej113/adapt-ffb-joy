@@ -257,6 +257,17 @@ void FfbwheelSetCondition(
 	USB_FFBReport_SetCondition_Output_Data_t* data,
 	volatile TEffectState* effect)
 {
+	uint8_t eid = data->effectBlockIndex;
+	FFW_MIDI_Effect_Spring_Inertia_Damper_t* midi_data = (FFW_MIDI_Effect_Spring_Inertia_Damper_t*)effect->data;
+
+	if (data->parameterBlockOffset == 0) { //ignore block 1. This assumes either one block with direction 90deg or 2 blocks and 1st is steering
+		FfbSetParamMidi_7bitMSB(effect->state, &(midi_data->positiveCoeff), eid, 
+								FFW_MIDI_MODIFY_POSITIVECOEFF, (64 + data->positiveCoefficient/2) & 0x7f);
+		FfbSetParamMidi_7bitMSB(effect->state, &(midi_data->negativeCoeff), eid, 
+								FFW_MIDI_MODIFY_NEGATIVECOEFF, (63 - data->negativeCoefficient/2) & 0x7f);	
+									//these result in 0 converting to 0x40 and 0x3F, but original drivers convert 0 to 0x3e. May need tweaking.
+	}
+	
 }
 
 void FfbwheelSetPeriodic(
@@ -269,6 +280,24 @@ void FfbwheelSetConstantForce(
 	USB_FFBReport_SetConstantForce_Output_Data_t* data,
 	volatile TEffectState* effect)
 {
+	uint8_t eid = data->effectBlockIndex;
+	volatile FFW_MIDI_Effect_ConstantForce_t *midi_data = (volatile FFW_MIDI_Effect_ConstantForce_t *)&effect->data;
+	
+	uint8_t midi_magnitude, midi_forceDirection;
+
+	if (data->magnitude >= 0) {
+		midi_magnitude = (data->magnitude >> 1) & 0x7f;
+		midi_forceDirection = 0x00;
+	} else {
+		midi_magnitude = (( -(data->magnitude + 1)) >> 1) & 0x7f;
+		midi_forceDirection = 0x7f;
+	}
+	
+	FfbSetParamMidi_7bit(effect->state, &(midi_data->magnitude), eid, 
+						FFW_MIDI_MODIFY_MAGNITUDE, midi_magnitude);
+	FfbSetParamMidi_7bit(effect->state, &(midi_data->forceDirection), eid, 
+						FFW_MIDI_MODIFY_FORCEDIRECTION, midi_forceDirection); 
+
 }
 
 void FfbwheelSetRampForce(
