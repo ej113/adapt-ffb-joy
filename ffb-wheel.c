@@ -223,8 +223,8 @@ void FfbwheelSendModify(uint8_t effectId, uint8_t address, uint16_t value)
 	uint8_t* d = (uint8_t*)&op;
 	uint8_t sum = d[2] + d[3] + d[4] + d[5];
 	
-	if (sum > 0x0F) 
-		op.def_and_address &= 0x40; //bit indicates sum > 256 when complete 
+	if (sum > 0x0F && sum <= 0x8F) 
+		op.def_and_address |= 0x40; //bit indicates 256 < sum <= 384 when complete 
 	
 	sum += d[0]; //complete sum
 	
@@ -261,11 +261,11 @@ void FfbwheelSetCondition(
 	FFW_MIDI_Effect_Spring_Inertia_Damper_t* midi_data = (FFW_MIDI_Effect_Spring_Inertia_Damper_t*)effect->data;
 
 	if (data->parameterBlockOffset == 0) { //ignore block 1. This assumes either one block with direction 90deg or 2 blocks and 1st is steering
-		FfbSetParamMidi_7bitMSB(effect->state, &(midi_data->positiveCoeff), eid, 
-								FFW_MIDI_MODIFY_POSITIVECOEFF, (64 + data->positiveCoefficient/2) & 0x7f);
-		FfbSetParamMidi_7bitMSB(effect->state, &(midi_data->negativeCoeff), eid, 
-								FFW_MIDI_MODIFY_NEGATIVECOEFF, (63 - data->negativeCoefficient/2) & 0x7f);	
-									//these result in 0 converting to 0x40 and 0x3F, but original drivers convert 0 to 0x3e. May need tweaking.
+		FfbSetParamMidi_14bit(effect->state, &(midi_data->positiveCoeff), eid, 
+								FFW_MIDI_MODIFY_POSITIVECOEFF, (((63 - data->positiveCoefficient/2) & 0x7f) << 8) | 0x007d);
+		FfbSetParamMidi_14bit(effect->state, &(midi_data->negativeCoeff), eid, 
+								FFW_MIDI_MODIFY_NEGATIVECOEFF, ((64 + data->negativeCoefficient/2) & 0x7f)<<8);	
+									//these result in 0 converting to 0x3F and 0x40, but original drivers convert 0 to 0x3e. May need tweaking.
 	}
 	
 }
@@ -355,6 +355,8 @@ int FfbwheelSetEffect(
 		midi_data_len = sizeof(FFW_MIDI_Effect_Spring_Inertia_Damper_t);
 		//FFW_MIDI_Effect_Spring_Inertia_Damper_t* midi_data = (FFW_MIDI_Effect_Spring_Inertia_Damper_t*)e->data;
 	}
+	break;
+	
 	case USB_EFFECT_FRICTION:
 	{
 		midi_data_len = sizeof(FFW_MIDI_Effect_Friction_t);
@@ -459,16 +461,16 @@ void FfbwheelCreateNewEffect(
 	{
 		FFW_MIDI_Effect_Spring_Inertia_Damper_t* midi_data = (FFW_MIDI_Effect_Spring_Inertia_Damper_t*)effect->data;
 		
-		midi_data->unknown3 = 0x00;
-		midi_data->negativeCoeff = 0x7d;
+		midi_data->negativeCoeff = 0x7d00;
 		midi_data->unknown4[0] = 0x3e;
 		midi_data->unknown4[1] = 0x3f;
 		midi_data->unknown4[2] = 0x3e;
 		midi_data->unknown4[3] = 0x3f;
-		midi_data->unknown4[4] = 0x7d;
-		midi_data->positiveCoeff = 0x00;
+		midi_data->positiveCoeff = 0x007d;
 		
 	}
+	break;
+	
 	case USB_EFFECT_FRICTION:
 	{
 		FFW_MIDI_Effect_Friction_t* midi_data = (FFW_MIDI_Effect_Friction_t*)effect->data;

@@ -87,10 +87,10 @@ typedef struct
 {
 	FFW_MIDI_Effect_Common_t	common;
 	
-	uint8_t unknown3; // always 0x00
-	uint8_t	negativeCoeff; //0x7d=-10000, 0x3e=0, 0x00=+10000; 7d is full on in stable sense
-	uint8_t	unknown4[5]; // always 3e 3f 3e 3f 7d; related to saturation and deadband, formula not known
-	uint8_t	positiveCoeff; //0x7d=-10000, 0x3e=0, 0x00=+10000; 00 is full on in stable sense
+	//positiveCoeff and negativeCoeff both contain other parameters, unknown and not adjusted, in the LSB
+	uint16_t	negativeCoeff; //0x007d=-10000, 0x003e=0, 0x0000=+10000; 7d is full on in stable sense
+	uint8_t		unknown4[4]; // always 3e 3f 3e 3f; related to saturation and deadband, formula not known
+	uint16_t	positiveCoeff; //0x7d7d=-10000, 0x7d3e=0, 0x7d00=+10000; 00 is full on in stable sense
 	
 } FFW_MIDI_Effect_Spring_Inertia_Damper_t;
 
